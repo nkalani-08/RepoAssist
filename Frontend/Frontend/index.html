@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RepoAssist | AI Codebase Intelligence</title>
+  
+  <!-- Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Markdown Parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <!-- Syntax Highlighting (Clean Light Theme) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <style>
+    /* Custom Scrollbar for Clean Light Theme */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Markdown Light Typography Styling */
+    .prose-light p {
+      margin-bottom: 0.85rem;
+      line-height: 1.65;
+      color: #334155;
+    }
+    .prose-light p:last-child {
+      margin-bottom: 0;
+    }
+    .prose-light pre {
+      background: #f8fafc !important;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.65rem;
+      padding: 0.85rem 1rem;
+      margin: 0.85rem 0;
+      overflow-x: auto;
+      font-size: 0.85rem;
+    }
+    .prose-light code:not(pre code) {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84em;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 0.15rem 0.35rem;
+      border-radius: 0.25rem;
+      border: 1px solid #e2e8f0;
+    }
+    .prose-light ul {
+      list-style-type: disc;
+      margin-left: 1.25rem;
+      margin-bottom: 0.85rem;
+      color: #334155;
+    }
+    .prose-light ol {
+      list-style-type: decimal;
+      margin-left: 1.25rem;
+      margin-bottom: 0.85rem;
+      color: #334155;
+    }
+    .prose-light li {
+      margin-bottom: 0.3rem;
+      line-height: 1.55;
+    }
+    .prose-light h1, .prose-light h2, .prose-light h3, .prose-light h4 {
+      font-weight: 600;
+      color: #0f172a;
+      margin-top: 1.1rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+    .prose-light h2 { font-size: 1.15rem; }
+    .prose-light h3 { font-size: 1.05rem; }
+    .prose-light blockquote {
+      border-left: 3px solid #10b981;
+      padding-left: 0.75rem;
+      color: #475569;
+      margin: 0.75rem 0;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased selection:bg-brand-100 selection:text-brand-800">
+
+  <!-- ================= 1. TOP NAVIGATION ================= -->
+  <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-15 flex items-center justify-between">
+      
+      <!-- Brand & Badges -->
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white shadow-xs">
+          <i data-lucide="git-branch" class="w-4 h-4"></i>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <span class="font-semibold text-slate-900 text-base tracking-tight">RepoAssist</span>
+          <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+            Agentic RAG
+          </span>
+        </div>
+      </div>
+
+      <!-- Right Controls: Status & Utility Buttons -->
+      <div class="flex items-center gap-2.5">
+        
+        <!-- Backend Connection Indicator -->
+        <div id="backend-status-pill" class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs text-slate-600 transition" title="FastAPI Backend Health">
+          <span id="status-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          <span id="status-text" class="font-medium text-[11px]">Connecting...</span>
+        </div>
+
+        <!-- Connection Settings -->
+        <button id="btn-settings" title="Backend Settings" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent hover:border-slate-200 transition">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Clear Chat -->
+        <button id="btn-clear-chat" title="Clear Chat History" class="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= MAIN APP WRAPPER ================= -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-5 flex flex-col gap-4">
+
+    <!-- ================= 2. REPOSITORY CONNECTION CARD ================= -->
+    <section class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs transition">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        
+        <!-- Left: URL Input Field -->
+        <div class="flex-1">
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="repo-url-input" class="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+              <i data-lucide="folder-git-2" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span>Target GitHub Repository</span>
+            </label>
+            
+            <!-- Quick Presets -->
+            <div class="flex items-center gap-1.5 text-xs text-slate-400">
+              <span>Quick try:</span>
+              <button class="preset-btn text-brand-600 hover:text-brand-700 hover:underline font-medium" data-url="https://github.com/psf/requests">requests</button>
+              <span>•</span>
+              <button class="preset-btn text-brand-600 hover:text-brand-700 hover:underline font-medium" data-url="https://github.com/pallets/flask">flask</button>
+              <span>•</span>
+              <button class="preset-btn text-brand-600 hover:text-brand-700 hover:underline font-medium" data-url="https://github.com/tiangolo/fastapi">fastapi</button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="relative flex-1">
+              <i data-lucide="link" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input 
+                type="text" 
+                id="repo-url-input" 
+                placeholder="https://github.com/username/repository" 
+                value="https://github.com/psf/requests"
+                class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-600 focus:bg-white font-mono transition"
+              >
+            </div>
+            
+            <!-- Load & Ingest Button (Prominent Green) -->
+            <button 
+              id="btn-load-repo"
+              class="px-4 py-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-medium text-sm rounded-lg transition flex items-center gap-2 shadow-xs shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <i data-lucide="arrow-down-to-line" class="w-4 h-4"></i>
+              <span>Load & Ingest</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Active Status Pill -->
+        <div class="flex items-center md:items-end justify-between md:justify-end gap-2 border-t md:border-t-0 md:border-l border-slate-100 pt-2.5 md:pt-0 md:pl-4">
+          <div class="text-right">
+            <div class="text-[11px] text-slate-400 font-medium">Active Codebase:</div>
+            <div id="active-repo-badge" class="mt-0.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-brand-50 text-brand-700 border border-brand-200 font-mono text-xs font-medium">
+              <span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
+              <span id="active-repo-name">psf/requests</span>
+              <span id="active-repo-chunks" class="text-brand-600 font-normal">(840 chunks)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Ingestion Progress Bar (Visible during backend ingest) -->
+      <div id="ingestion-progress" class="hidden mt-3 pt-3 border-t border-slate-100">
+        <div class="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+          <span id="ingestion-stage-text" class="font-medium text-slate-700 flex items-center gap-1.5">
+            <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-brand-600"></i>
+            <span>Processing repository with backend...</span>
+          </span>
+          <span id="ingestion-percent-text" class="font-mono text-brand-700 font-semibold">25%</span>
+        </div>
+        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+          <div id="ingestion-bar" class="bg-brand-600 h-full w-1/4 transition-all duration-300"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3. MAIN CHAT INTERFACE ================= -->
+    <section class="flex-1 bg-white border border-slate-200 rounded-xl flex flex-col overflow-hidden shadow-xs relative min-h-[520px]">
+      
+      <!-- Messages Feed -->
+      <div id="messages-container" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+
+        <!-- Welcoming Introduction & Suggested Cards -->
+        <div id="welcome-state" class="my-auto py-8 max-w-2xl mx-auto text-center space-y-5">
+          <div class="w-12 h-12 mx-auto rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 shadow-xs">
+            <i data-lucide="sparkles" class="w-6 h-6"></i>
+          </div>
+          
+          <div class="space-y-1.5">
+            <h2 class="text-lg font-bold text-slate-900 tracking-tight">Ask anything about your codebase</h2>
+            <p class="text-sm text-slate-500 leading-relaxed max-w-lg mx-auto">
+              Ask natural-language questions to analyze code structure, implementation details, and high-level architectural patterns with grounded verification.
+            </p>
+          </div>
+
+          <!-- Suggested Question Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-left">
+            
+            <!-- Card 1: Code Details -->
+            <button class="starter-card p-3.5 rounded-xl bg-slate-50 hover:bg-white border border-slate-200 hover:border-brand-500/50 hover:shadow-xs transition group cursor-pointer" data-prompt="Where is authentication handled in this repository?">
+              <div class="flex items-center gap-1.5 text-xs font-semibold text-brand-700 mb-1">
+                <i data-lucide="code-2" class="w-3.5 h-3.5"></i>
+                <span>Code Details</span>
+              </div>
+              <p class="text-xs text-slate-600 group-hover:text-slate-900 transition leading-snug">
+                "Where is authentication handled in this repository?"
+              </p>
+            </button>
+
+            <!-- Card 2: Architecture -->
+            <button class="starter-card p-3.5 rounded-xl bg-slate-50 hover:bg-white border border-slate-200 hover:border-brand-500/50 hover:shadow-xs transition group cursor-pointer" data-prompt="Explain the architecture of request and session management.">
+              <div class="flex items-center gap-1.5 text-xs font-semibold text-sky-700 mb-1">
+                <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                <span>Architecture</span>
+              </div>
+              <p class="text-xs text-slate-600 group-hover:text-slate-900 transition leading-snug">
+                "Explain the architecture of request and session management."
+              </p>
+            </button>
+
+            <!-- Card 3: Repository Overview -->
+            <button class="starter-card p-3.5 rounded-xl bg-slate-50 hover:bg-white border border-slate-200 hover:border-brand-500/50 hover:shadow-xs transition group cursor-pointer" data-prompt="What does this repository do and what are its key features?">
+              <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1">
+                <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+                <span>Repository Overview</span>
+              </div>
+              <p class="text-xs text-slate-600 group-hover:text-slate-900 transition leading-snug">
+                "What does this repository do and what are its key features?"
+              </p>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Chat messages dynamically rendered here -->
+      </div>
+
+      <!-- ================= 4 & 5. RETRIEVAL SELECTOR & CHAT INPUT ================= -->
+      <div class="border-t border-slate-200 bg-white p-4">
+        
+        <!-- Controls Bar Above Input -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 px-0.5">
+          
+          <!-- Retrieval Mode Selector with Friendly Labels -->
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-medium text-slate-500">Retrieval Mode:</span>
+            <select 
+              id="select-mode" 
+              class="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-600 cursor-pointer transition"
+            >
+              <option value="auto">Smart Router (Automatic — detects question type)</option>
+              <option value="code">Code Search (Exact function, class & variable lookup)</option>
+              <option value="architecture">Architecture (System design, relationships & flows)</option>
+              <option value="overview">Overview (High-level summary, features & purpose)</option>
+            </select>
+          </div>
+
+          <div class="text-[11px] text-slate-400 hidden sm:block">
+            <span>Press <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 font-mono text-[10px] text-slate-600">Enter</kbd> to send, <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 font-mono text-[10px] text-slate-600">Shift + Enter</kbd> for newline</span>
+          </div>
+        </div>
+
+        <!-- Chat Input Form -->
+        <form id="chat-form" class="flex items-end gap-2.5">
+          <div class="relative flex-1 bg-slate-50 border border-slate-300 rounded-xl focus-within:border-brand-600 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-500/20 transition">
+            <textarea 
+              id="user-input" 
+              rows="1" 
+              placeholder="Ask a question about this repository..." 
+              class="w-full px-4 py-3 bg-transparent text-sm text-slate-900 placeholder:text-slate-400 resize-none focus:outline-none max-h-36 overflow-y-auto leading-relaxed"
+            ></textarea>
+          </div>
+
+          <!-- Prominent Green Send Button -->
+          <button 
+            type="submit" 
+            id="btn-send"
+            class="h-11 px-4 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl transition flex items-center justify-center shadow-xs disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            title="Send Message"
+          >
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </form>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================= 6. BACKEND CONNECTION SETTINGS MODAL ================= -->
+  <div id="modal-settings" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2 font-semibold text-slate-900 text-sm">
+          <i data-lucide="server" class="w-4 h-4 text-brand-600"></i>
+          <span>Backend Configuration</span>
+        </div>
+        <button id="btn-close-modal" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="space-y-3.5 text-xs text-slate-600">
+        <div>
+          <label class="block font-medium mb-1.5 text-slate-700">FastAPI Server URL</label>
+          <input 
+            type="text" 
+            id="input-api-url" 
+            value="http://127.0.0.1:8000"
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-mono text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-600"
+          >
+          <p class="text-[11px] text-slate-400 mt-1">Default local port is 8000. Ensure CORS is enabled on FastAPI.</p>
+        </div>
+
+        <!-- Connection Test Box -->
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-slate-700">Server Health Check</span>
+            <button id="btn-test-connection" class="px-2.5 py-1 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium transition flex items-center gap-1.5">
+              <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+              <span>Test Connection</span>
+            </button>
+          </div>
+          <div id="test-connection-result" class="text-[11px] text-slate-500">
+            Click 'Test Connection' to ping <code class="font-mono">/api/health</code>.
+          </div>
+        </div>
+
+        <!-- Optional Offline Mock Mode (Disabled by default) -->
+        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <div>
+            <div class="font-medium text-slate-800">Demo / Offline Preview Mode</div>
+            <div class="text-[11px] text-slate-500">Only check this if your FastAPI server is not running yet</div>
+          </div>
+          <input type="checkbox" id="check-mock-mode" class="w-4 h-4 accent-brand-600 rounded">
+        </div>
+
+        <!-- Endpoint Reference -->
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] space-y-1 text-slate-500">
+          <div class="font-semibold text-slate-700">Expected API Routes:</div>
+          <div>• <code class="text-brand-700 font-mono">POST /api/ingest</code> - <span class="text-slate-400">{ repo_url }</span></div>
+          <div>• <code class="text-brand-700 font-mono">POST /api/query</code> - <span class="text-slate-400">{ question, mode }</span></div>
+          <div>• <code class="text-brand-700 font-mono">GET /api/health</code> - <span class="text-slate-400">{ status: "ok" }</span></div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+        <button id="btn-cancel-settings" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition">
+          Cancel
+        </button>
+        <button id="btn-save-settings" class="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium transition shadow-xs">
+          Save Settings
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT STATE & LOGIC ================= -->
+  <script>
+    // Application State Store (Mock Mode is false by default as requested)
+    const state = {
+      apiUrl: localStorage.getItem('repo_api_url') || 'http://127.0.0.1:8000',
+      mockMode: localStorage.getItem('repo_mock_mode') === 'true', // Default is FALSE
+      activeRepo: 'psf/requests',
+      activeChunks: 840,
+      isIngesting: false,
+      isQuerying: false,
+      messages: []
+    };
+
+    // DOM Elements
+    const elements = {
+      messagesContainer: document.getElementById('messages-container'),
+      welcomeState: document.getElementById('welcome-state'),
+      chatForm: document.getElementById('chat-form'),
+      userInput: document.getElementById('user-input'),
+      btnSend: document.getElementById('btn-send'),
+      btnLoadRepo: document.getElementById('btn-load-repo'),
+      repoUrlInput: document.getElementById('repo-url-input'),
+      activeRepoName: document.getElementById('active-repo-name'),
+      activeRepoChunks: document.getElementById('active-repo-chunks'),
+      ingestionProgress: document.getElementById('ingestion-progress'),
+      ingestionBar: document.getElementById('ingestion-bar'),
+      ingestionStageText: document.getElementById('ingestion-stage-text'),
+      ingestionPercentText: document.getElementById('ingestion-percent-text'),
+      statusDot: document.getElementById('status-dot'),
+      statusText: document.getElementById('status-text'),
+      modalSettings: document.getElementById('modal-settings'),
+      btnSettings: document.getElementById('btn-settings'),
+      btnCloseModal: document.getElementById('btn-close-modal'),
+      btnCancelSettings: document.getElementById('btn-cancel-settings'),
+      inputApiUrl: document.getElementById('input-api-url'),
+      checkMockMode: document.getElementById('check-mock-mode'),
+      btnSaveSettings: document.getElementById('btn-save-settings'),
+      btnTestConnection: document.getElementById('btn-test-connection'),
+      testConnectionResult: document.getElementById('test-connection-result'),
+      btnClearChat: document.getElementById('btn-clear-chat'),
+      selectMode: document.getElementById('select-mode')
+    };
+
+    // Initialize App
+    function init() {
+      lucide.createIcons();
+      elements.checkMockMode.checked = state.mockMode;
+      checkBackendHealth();
+      setupEventListeners();
+      autoGrowTextarea();
+    }
+
+    // Health Check
+    async function checkBackendHealth() {
+      if (state.mockMode) {
+        setBackendStatus('mock', 'Demo Mode (Offline)');
+        return;
+      }
+      try {
+        setBackendStatus('checking', 'Connecting...');
+        const res = await fetch(`${state.apiUrl}/api/health`, { 
+          method: 'GET', 
+          signal: AbortSignal.timeout(2500) 
+        });
+        if (res.ok) {
+          setBackendStatus('online', 'Connected');
+        } else {
+          setBackendStatus('error', `HTTP ${res.status}`);
+        }
+      } catch (e) {
+        setBackendStatus('offline', 'FastAPI Offline');
+      }
+    }
+
+    function setBackendStatus(type, label) {
+      if (type === 'online') {
+        elements.statusDot.className = 'w-2 h-2 rounded-full bg-brand-500';
+        elements.statusText.textContent = label;
+        elements.statusText.className = 'font-medium text-[11px] text-brand-700';
+      } else if (type === 'checking') {
+        elements.statusDot.className = 'w-2 h-2 rounded-full bg-slate-400 animate-pulse';
+        elements.statusText.textContent = label;
+        elements.statusText.className = 'font-medium text-[11px] text-slate-500';
+      } else if (type === 'mock') {
+        elements.statusDot.className = 'w-2 h-2 rounded-full bg-amber-500';
+        elements.statusText.textContent = label;
+        elements.statusText.className = 'font-medium text-[11px] text-amber-700';
+      } else {
+        elements.statusDot.className = 'w-2 h-2 rounded-full bg-rose-500';
+        elements.statusText.textContent = label;
+        elements.statusText.className = 'font-medium text-[11px] text-rose-600';
+      }
+    }
+
+    // Auto grow textarea
+    function autoGrowTextarea() {
+      elements.userInput.addEventListener('input', () => {
+        elements.userInput.style.height = 'auto';
+        elements.userInput.style.height = Math.min(elements.userInput.scrollHeight, 140) + 'px';
+      });
+    }
+
+    // Event Listeners
+    function setupEventListeners() {
+      // Chat Form Submit
+      elements.chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleSubmitQuery();
+      });
+
+      // Enter to send, Shift+Enter for newline
+      elements.userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          handleSubmitQuery();
+        }
+      });
+
+      // Starter Question Cards
+      document.querySelectorAll('.starter-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const prompt = card.getAttribute('data-prompt');
+          elements.userInput.value = prompt;
+          handleSubmitQuery();
+        });
+      });
+
+      // Quick Repo Preset Buttons
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          elements.repoUrlInput.value = btn.getAttribute('data-url');
+        });
+      });
+
+      // Load & Ingest Button
+      elements.btnLoadRepo.addEventListener('click', handleIngestRepository);
+
+      // Settings Modal
+      elements.btnSettings.addEventListener('click', () => {
+        elements.inputApiUrl.value = state.apiUrl;
+        elements.checkMockMode.checked = state.mockMode;
+        elements.testConnectionResult.textContent = "Click 'Test Connection' to ping /api/health.";
+        elements.testConnectionResult.className = "text-[11px] text-slate-500";
+        elements.modalSettings.classList.remove('hidden');
+      });
+
+      const closeModal = () => elements.modalSettings.classList.add('hidden');
+      elements.btnCloseModal.addEventListener('click', closeModal);
+      elements.btnCancelSettings.addEventListener('click', closeModal);
+
+      // Save Settings
+      elements.btnSaveSettings.addEventListener('click', () => {
+        state.apiUrl = elements.inputApiUrl.value.trim().replace(/\/$/, '');
+        state.mockMode = elements.checkMockMode.checked;
+        localStorage.setItem('repo_api_url', state.apiUrl);
+        localStorage.setItem('repo_mock_mode', state.mockMode ? 'true' : 'false');
+        closeModal();
+        checkBackendHealth();
+      });
+
+      // Test Connection Button in Modal
+      elements.btnTestConnection.addEventListener('click', async () => {
+        const testUrl = elements.inputApiUrl.value.trim().replace(/\/$/, '');
+        elements.testConnectionResult.textContent = 'Pinging /api/health...';
+        elements.testConnectionResult.className = 'text-[11px] text-slate-600';
+
+        try {
+          const res = await fetch(`${testUrl}/api/health`, { signal: AbortSignal.timeout(3000) });
+          if (res.ok) {
+            elements.testConnectionResult.innerHTML = `<span class="text-brand-600 font-semibold">✓ Connected!</span> Server responded with status 200 OK.`;
+          } else {
+            elements.testConnectionResult.innerHTML = `<span class="text-amber-600 font-semibold">⚠ Warning:</span> Server returned HTTP status ${res.status}.`;
+          }
+        } catch (err) {
+          elements.testConnectionResult.innerHTML = `<span class="text-rose-600 font-semibold">✕ Unreachable:</span> Could not connect to ${testUrl}. Ensure your FastAPI app is running with CORS enabled.`;
+        }
+      });
+
+      // Clear Chat
+      elements.btnClearChat.addEventListener('click', () => {
+        if (state.messages.length > 0 && confirm('Clear current conversation?')) {
+          state.messages = [];
+          renderMessages();
+        }
+      });
+    }
+
+    // Repository Ingestion Process
+    async function handleIngestRepository() {
+      const repoUrl = elements.repoUrlInput.value.trim();
+      if (!repoUrl) return alert('Please enter a GitHub repository URL.');
+
+      state.isIngesting = true;
+      elements.btnLoadRepo.disabled = true;
+      elements.ingestionProgress.classList.remove('hidden');
+
+      const stages = [
+        { pct: 20, text: 'Connecting to GitHub REST API...' },
+        { pct: 45, text: 'Filtering source code files (.py, .js, .md)...' },
+        { pct: 70, text: 'Creating text chunks (size: 800, overlap: 150)...' },
+        { pct: 90, text: 'Generating embeddings with BAAI/bge-small-en-v1.5...' },
+        { pct: 100, text: 'Ingestion complete!' }
+      ];
+
+      try {
+        if (!state.mockMode) {
+          // Real backend call to FastAPI
+          updateProgress(25, 'Sending ingestion request to FastAPI backend...');
+
+          const response = await fetch(`${state.apiUrl}/api/ingest`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ repo_url: repoUrl })
+          });
+
+          if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Server returned ${response.status}: ${errText}`);
+          }
+
+          const data = await response.json();
+          updateProgress(100, `Successfully ingested ${data.chunks_count || 'all'} chunks.`);
+          
+          const repoName = repoUrl.replace('https://github.com/', '').replace(/\.git$/, '');
+          state.activeRepo = repoName;
+          state.activeChunks = data.chunks_count || 840;
+          elements.activeRepoName.textContent = state.activeRepo;
+          elements.activeRepoChunks.textContent = `(${state.activeChunks} chunks)`;
+
+        } else {
+          // Demo simulation
+          for (let s of stages) {
+            updateProgress(s.pct, s.text);
+            await new Promise(r => setTimeout(r, 450));
+          }
+          const repoName = repoUrl.replace('https://github.com/', '').replace(/\.git$/, '');
+          state.activeRepo = repoName;
+          state.activeChunks = 840;
+          elements.activeRepoName.textContent = state.activeRepo;
+          elements.activeRepoChunks.textContent = `(${state.activeChunks} chunks)`;
+        }
+
+        setTimeout(() => {
+          elements.ingestionProgress.classList.add('hidden');
+        }, 1500);
+
+      } catch (err) {
+        alert(`Ingestion error: ${err.message}\n\nMake sure your FastAPI server is running at ${state.apiUrl} and has CORS middleware enabled.`);
+        elements.ingestionProgress.classList.add('hidden');
+      } finally {
+        state.isIngesting = false;
+        elements.btnLoadRepo.disabled = false;
+      }
+    }
+
+    function updateProgress(percent, text) {
+      elements.ingestionBar.style.width = `${percent}%`;
+      elements.ingestionPercentText.textContent = `${percent}%`;
+      elements.ingestionStageText.innerHTML = `
+        <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-brand-600"></i>
+        <span>${text}</span>
+      `;
+      lucide.createIcons();
+    }
+
+    // Handle Question Submission
+    async function handleSubmitQuery() {
+      const question = elements.userInput.value.trim();
+      if (!question || state.isQuerying) return;
+
+      // Add user message to state
+      state.messages.push({
+        sender: 'user',
+        text: question,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+
+      elements.userInput.value = '';
+      elements.userInput.style.height = 'auto';
+      renderMessages();
+
+      // Add loading assistant placeholder
+      state.isQuerying = true;
+      elements.btnSend.disabled = true;
+
+      const assistantMsgId = 'msg-' + Date.now();
+      state.messages.push({
+        id: assistantMsgId,
+        sender: 'assistant',
+        text: '',
+        isLoading: true,
+        research: 'Planning query...',
+        feedback: null,
+        sources: []
+      });
+      renderMessages();
+
+      try {
+        let answerData;
+
+        if (!state.mockMode) {
+          // Real backend call to FastAPI POST /api/query
+          const res = await fetch(`${state.apiUrl}/api/query`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              question: question,
+              mode: elements.selectMode.value
+            })
+          });
+
+          if (!res.ok) {
+            const errBody = await res.text();
+            throw new Error(`HTTP ${res.status}: ${errBody}`);
+          }
+
+          answerData = await res.json();
+
+        } else {
+          // Offline mock response
+          await new Promise(r => setTimeout(r, 900));
+          answerData = generateLightMockAnswer(question, elements.selectMode.value);
+        }
+
+        // Update placeholder with returned data
+        const msg = state.messages.find(m => m.id === assistantMsgId);
+        if (msg) {
+          msg.isLoading = false;
+          msg.text = answerData.answer || 'No response returned from model.';
+          msg.research = answerData.research || 'code';
+          msg.feedback = answerData.feedback || 'Good';
+          msg.retries = answerData.retries || 0;
+          msg.sources = answerData.sources || [];
+        }
+
+      } catch (err) {
+        const msg = state.messages.find(m => m.id === assistantMsgId);
+        if (msg) {
+          msg.isLoading = false;
+          msg.text = `⚠️ **Could not connect to FastAPI backend:**\n\`${err.message}\`\n\n**To resolve:**\n1. Ensure your FastAPI server is running: \`uvicorn main:app --reload --port 8000\`\n2. Verify CORS is enabled for frontend origins.\n3. Or enable **Demo / Offline Preview Mode** in Settings (gear icon) to test the UI without a live backend.`;
+          msg.feedback = 'Bad';
+          msg.research = 'error';
+        }
+      } finally {
+        state.isQuerying = false;
+        elements.btnSend.disabled = false;
+        renderMessages();
+      }
+    }
+
+    // Render Messages with Clean Light Styling
+    function renderMessages() {
+      if (state.messages.length === 0) {
+        elements.welcomeState.classList.remove('hidden');
+        elements.messagesContainer.innerHTML = '';
+        elements.messagesContainer.appendChild(elements.welcomeState);
+        return;
+      }
+
+      elements.welcomeState.classList.add('hidden');
+      elements.messagesContainer.innerHTML = '';
+
+      state.messages.forEach(msg => {
+        if (msg.sender === 'user') {
+          // User Message (Dark Navy / Charcoal Card with High Contrast)
+          const userNode = document.createElement('div');
+          userNode.className = 'flex justify-end';
+          userNode.innerHTML = `
+            <div class="max-w-2xl bg-slate-900 text-white rounded-2xl rounded-tr-xs px-4 py-3 shadow-xs">
+              <p class="text-sm leading-relaxed">${escapeHtml(msg.text)}</p>
+              <div class="text-[10px] text-slate-400 text-right mt-1.5 font-mono">${msg.timestamp || ''}</div>
+            </div>
+          `;
+          elements.messagesContainer.appendChild(userNode);
+
+        } else {
+          // Assistant Message (Clean White Card with Subtle Border & Soft Shadow)
+          const assistantNode = document.createElement('div');
+          assistantNode.className = 'flex gap-3 max-w-3xl';
+
+          // Routing Intent Badge Styling
+          let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
+          let badgeLabel = 'Code (BM25)';
+          const research = (msg.research || '').toLowerCase();
+
+          if (research === 'code') {
+            badgeColor = 'bg-brand-50 text-brand-700 border-brand-200';
+            badgeLabel = 'Code Search (BM25)';
+          } else if (research === 'architecture') {
+            badgeColor = 'bg-sky-50 text-sky-700 border-sky-200';
+            badgeLabel = 'Architecture (Vector)';
+          } else if (research === 'overview') {
+            badgeColor = 'bg-purple-50 text-purple-700 border-purple-200';
+            badgeLabel = 'Overview (Hybrid)';
+          } else if (research === 'error') {
+            badgeColor = 'bg-rose-50 text-rose-700 border-rose-200';
+            badgeLabel = 'Connection Error';
+          }
+
+          if (msg.isLoading) {
+            assistantNode.innerHTML = `
+              <div class="w-8 h-8 rounded-lg bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 shrink-0">
+                <i data-lucide="bot" class="w-4 h-4"></i>
+              </div>
+              <div class="flex-1 bg-white border border-slate-200 rounded-xl rounded-tl-xs p-4 shadow-xs space-y-3">
+                <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                  <div class="w-2 h-2 rounded-full bg-brand-600 animate-ping"></div>
+                  <span>Orchestrating LangGraph retrieval & answer generation...</span>
+                </div>
+                <div class="space-y-2 animate-pulse">
+                  <div class="h-3 bg-slate-100 rounded w-3/4"></div>
+                  <div class="h-3 bg-slate-100 rounded w-5/6"></div>
+                  <div class="h-3 bg-slate-100 rounded w-1/2"></div>
+                </div>
+              </div>
+            `;
+          } else {
+            // Rendered Markdown Content
+            const parsedContent = marked.parse(msg.text);
+
+            // Sources Expandable Accordion
+            let sourcesHtml = '';
+            if (msg.sources && msg.sources.length > 0) {
+              const sourceItems = msg.sources.map(s => `
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                  <div class="flex items-center justify-between font-mono font-medium text-slate-800 mb-1">
+                    <span class="flex items-center gap-1.5 text-brand-700">
+                      <i data-lucide="file-code" class="w-3.5 h-3.5"></i>
+                      <span>${escapeHtml(s.source || 'unknown')}</span>
+                    </span>
+                    <span class="text-[10px] text-slate-400">Chunk #${s.id || ''}</span>
+                  </div>
+                  <div class="text-slate-600 text-[11px] font-mono leading-relaxed line-clamp-3">${escapeHtml(s.content || '')}</div>
+                </div>
+              `).join('');
+
+              sourcesHtml = `
+                <div class="mt-4 pt-3 border-t border-slate-100">
+                  <details class="group">
+                    <summary class="cursor-pointer text-xs font-medium text-slate-600 hover:text-slate-900 flex items-center justify-between transition list-none select-none">
+                      <span class="flex items-center gap-1.5">
+                        <i data-lucide="layers" class="w-3.5 h-3.5 text-brand-600"></i>
+                        <span>Retrieved Context (${msg.sources.length} source passages used)</span>
+                      </span>
+                      <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <div class="mt-2.5 space-y-2">
+                      ${sourceItems}
+                    </div>
+                  </details>
+                </div>
+              `;
+            }
+
+            assistantNode.innerHTML = `
+              <div class="w-8 h-8 rounded-lg bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 shrink-0 mt-0.5">
+                <i data-lucide="bot" class="w-4 h-4"></i>
+              </div>
+              <div class="flex-1 bg-white border border-slate-200 rounded-xl rounded-tl-xs p-4 shadow-xs">
+                
+                <!-- Metadata Bar -->
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3 text-xs">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded-full border text-[11px] font-medium font-mono ${badgeColor}">
+                      ${badgeLabel}
+                    </span>
+                    ${msg.feedback === 'Good' ? `
+                      <span class="inline-flex items-center gap-1 text-[11px] text-brand-700 font-medium">
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-brand-600"></i>
+                        <span>Grounded Answer</span>
+                      </span>
+                    ` : ''}
+                  </div>
+
+                  <button class="copy-btn text-slate-400 hover:text-slate-700 p-1 rounded transition" title="Copy Answer">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>
+
+                <!-- Markdown Formatted Body -->
+                <div class="prose-light text-sm text-slate-700">
+                  ${parsedContent}
+                </div>
+
+                <!-- Expandable Sources -->
+                ${sourcesHtml}
+              </div>
+            `;
+          }
+
+          elements.messagesContainer.appendChild(assistantNode);
+        }
+      });
+
+      // Syntax highlight code blocks
+      document.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+      });
+
+      // Reinitialize Lucide Icons
+      lucide.createIcons();
+
+      // Setup Copy Buttons
+      document.querySelectorAll('.copy-btn').forEach((btn, idx) => {
+        btn.addEventListener('click', () => {
+          const assistantMsgs = state.messages.filter(m => m.sender === 'assistant');
+          if (assistantMsgs[idx]) {
+            navigator.clipboard.writeText(assistantMsgs[idx].text);
+            btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-brand-600"></i>`;
+            lucide.createIcons();
+            setTimeout(() => {
+              btn.innerHTML = `<i data-lucide="copy" class="w-3.5 h-3.5"></i>`;
+              lucide.createIcons();
+            }, 1800);
+          }
+        });
+      });
+
+      // Auto-scroll to latest message
+      elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
+    }
+
+    // Realistic Demo Mock Generator (When Mock Mode is toggled ON)
+    function generateLightMockAnswer(question, forcedMode) {
+      const q = question.toLowerCase();
+      let research = 'code';
+      let answer = '';
+      let sources = [];
+
+      if (forcedMode && forcedMode !== 'auto') {
+        research = forcedMode;
+      } else if (q.includes('what does') || q.includes('overview') || q.includes('purpose') || q.includes('features')) {
+        research = 'overview';
+      } else if (q.includes('architect') || q.includes('design') || q.includes('flow') || q.includes('structure')) {
+        research = 'architecture';
+      }
+
+      if (research === 'code') {
+        answer = `Based on the repository context in \`src/requests/sessions.py\` and \`src/requests/models.py\`, authentication in **${state.activeRepo}** is prepared through \`PreparedRequest.prepare_auth\`:\n\n\`\`\`python\ndef prepare_auth(self, auth, url=\"\"):\n    if auth is None:\n        auth = get_netrc_auth(url)\n    if auth:\n        if isinstance(auth, tuple):\n            auth = HTTPBasicAuth(*auth)\n        r = auth(self)\n        self.__dict__.update(r.__dict__)\n\`\`\`\n\n### Core Authentication Classes:\n- **\`HTTPBasicAuth\`** (\`src/requests/auth.py\`): Attaches RFC 7617 HTTP Basic base64 Authorization headers.\n- **\`HTTPDigestAuth\`** (\`src/requests/auth.py\`): Implements HTTP Digest authentication challenge responses.`;
+        sources = [
+          { source: 'src/requests/models.py', id: '142', content: 'def prepare_auth(self, auth, url=""): if auth is None: auth = get_netrc_auth(url)...' },
+          { source: 'src/requests/auth.py', id: '89', content: 'class HTTPBasicAuth(AuthBase): def __call__(self, r): r.headers["Authorization"] = ...' }
+        ];
+      } else if (research === 'architecture') {
+        answer = `The architecture of **${state.activeRepo}** is designed around transport adapters and session connection pooling.\n\n### Core Architectural Components:\n1. **High-Level API (\`api.py\`):** Provides functional entry points (\`get\`, \`post\`, \`put\`).\n2. **Session Layer (\`sessions.py\`):** Persists configuration, cookies, and mounts transport adapters.\n3. **Transport Adapter Layer (\`adapters.py\`):** Bridges requests to low-level sockets via \`urllib3.PoolManager\`.\n4. **Data Models (\`models.py\`):** Implements stateful representations (\`Request\`, \`PreparedRequest\`, and \`Response\`).`;
+        sources = [
+          { source: 'src/requests/sessions.py', id: '210', content: 'class Session(SessionRedirectMixin): def mount(self, prefix, adapter): ...' },
+          { source: 'src/requests/adapters.py', id: '315', content: 'class HTTPAdapter(BaseAdapter): def send(self, request, stream=False, timeout=None): ...' }
+        ];
+      } else {
+        answer = `**${state.activeRepo}** is an elegant, battle-tested HTTP client library for Python.\n\n### Key Highlights:\n- Simple, expressive API for standard HTTP verbs.\n- Keep-Alive & HTTP connection pooling.\n- Automatic content decoding and JSON serialization.\n- Robust session management with cookie persistence.\n- SSL verification and custom transport adapters.`;
+        sources = [
+          { source: 'README.md', id: '1', content: 'Requests: HTTP for Humans. A simple, yet elegant HTTP library.' },
+          { source: 'HISTORY.md', id: '14', content: 'Changelog of major releases and stability improvements.' }
+        ];
+      }
+
+      return {
+        answer,
+        research,
+        feedback: 'Good',
+        retries: 0,
+        sources
+      };
+    }
+
+    // Utility: HTML string escaping
+    function escapeHtml(str) {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+      return String(str).replace(/[&<>"']/g, s => map[s]);
+    }
+
+    // Boot
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+
+</body>
+</html>
